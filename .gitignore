@@ -1,0 +1,6 @@
+_build/
+_checkouts/
+.DS_Store
+.idea/
+*.iml
+gen/

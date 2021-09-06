@@ -1,0 +1,4 @@
+[{<<"nthrottle">>,
+  {git,"git@github.com:nomasystems/nthrottle.git",
+       {ref,"20595b2cf71b6cd51a4280b27bec55f231682dca"}},
+  0}].

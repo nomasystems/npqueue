@@ -1,0 +1,8 @@
+%%% -*- mode:erlang -*-
+{application, npqueue, [
+    {description, "Simple and fast FIFO queue divided in partitions."},
+    {vsn, "1.0.0"},
+    {registered, []},
+    {applications, [kernel, stdlib, nthrottle]},
+    {env, []}
+]}.
