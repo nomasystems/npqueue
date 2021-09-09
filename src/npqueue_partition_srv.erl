@@ -55,7 +55,9 @@
 start_link(QueueName, PartitionNum, ConsumerCount, ConsumerFun) ->
     SrvName = ?SRV_NAME(QueueName, PartitionNum),
     gen_server:start_link(
-        {local, SrvName}, ?MODULE, [QueueName, PartitionNum, ConsumerCount, ConsumerFun], []
+        {local, SrvName}, ?MODULE, [QueueName, PartitionNum, ConsumerCount, ConsumerFun], [
+            {spawn_opt, [{fullsweep_after, 10}]}
+        ]
     ).
 
 stop(Name, PartitionNum) when is_atom(Name) ->
