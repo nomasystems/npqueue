@@ -64,7 +64,7 @@ init([QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps]) ->
     npqueue_conf:num_partitions(QueueName, PartitionCount),
     PartitionSrvs = init_partitions(QueueName, ConsumerCount, ConsumerFun, PartitionCount),
     npqueue_conf:partition_servers(QueueName, PartitionSrvs),
-    npqueue_metrics:add_queue(QueueName),
+    nhooks:do(npqueue, 'init_queue', [QueueName]),
     {ok, #st{
         name = QueueName,
         function = ConsumerFun,
@@ -78,7 +78,7 @@ terminate(_Reason, St) ->
     PartitionServers = npqueue_conf:partition_servers(St#st.name),
     PartitionServersList = maps:to_list(PartitionServers),
     lists:foreach(Terminate, PartitionServersList),
-    npqueue_metrics:delete_queue(St#st.name),
+    nhooks:do(npqueue, 'terminate_queue', [St#st.name]),
     npqueue_counters:clear(St#st.name),
     npqueue_conf:clear(St#st.name),
     nthrottle:stop_throttling(St#st.name),
