@@ -22,6 +22,9 @@
 %%% UTIL EXPORTS
 -export([is_empty/1, len/1, total_in/1, total_out/1, rps/1, rps/2]).
 
+%%% NHOOKS EXPORTS
+-export([hooks/0]).
+
 %%%-----------------------------------------------------------------------------
 %%% START/STOP EXPORTS
 %%%-----------------------------------------------------------------------------
@@ -72,3 +75,9 @@ rps(QueueName, Rps) when
     (Rps >= 0)
 ->
     nthrottle:rps(QueueName, Rps).
+
+hooks() ->
+    [
+        'init_queue',
+        'terminate_queue'
+    ].

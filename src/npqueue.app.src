@@ -3,6 +3,6 @@
     {description, "Simple and fast FIFO queue divided in partitions."},
     {vsn, "1.0.0"},
     {registered, []},
-    {applications, [kernel, stdlib, nthrottle]},
+    {applications, [kernel, stdlib, nhooks, nthrottle]},
     {env, []}
 ]}.
