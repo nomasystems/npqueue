@@ -60,7 +60,6 @@ init([QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps]) ->
     nthrottle:start_throttling(QueueName, Rps),
     npqueue_conf:init(QueueName),
     npqueue_counters:init(QueueName),
-    npqueue_metrics:register(),
     npqueue_conf:num_partitions(QueueName, PartitionCount),
     PartitionSrvs = init_partitions(QueueName, ConsumerCount, ConsumerFun, PartitionCount),
     npqueue_conf:partition_servers(QueueName, PartitionSrvs),
