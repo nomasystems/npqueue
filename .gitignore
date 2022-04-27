@@ -1,6 +1,5 @@
 _build/
 _checkouts/
-.DS_Store
-.idea/
-*.iml
-gen/
+_gen/
+*.dump
+*.crashdump
