@@ -26,7 +26,7 @@
 %%% START/STOP EXPORTS
 %%%-----------------------------------------------------------------------------
 start_monitoring(QueueName, Fun) ->
-    {Pid, MonRef} = erlang:spawn_opt(?MODULE, wait_for_consuming, [self(), QueueName, Fun], [
+    {Pid, MonRef} = erlang:spawn_opt(?MODULE, wait_for_consuming, [erlang:self(), QueueName, Fun], [
         monitor, {fullsweep_after, 10}
     ]),
     {ok, {Pid, MonRef}}.
@@ -35,21 +35,21 @@ start_monitoring(QueueName, Fun) ->
 %%% INTERNAL FUNCTIONS
 %%%-----------------------------------------------------------------------------
 wait_for_consuming(Parent, QueueName, Fun) ->
-    npqueue_partition_srv:consumer_waiting(Parent, self()),
+    npqueue_partition_srv:consumer_waiting(Parent, erlang:self()),
     receive
         {consume, Item} ->
             npqueue_counters:counter_out_add(QueueName),
             consume(Item, QueueName, Fun);
         {exit, Reason} ->
-            exit(Reason);
+            erlang:exit(Reason);
         {exit, Reason, From} ->
-            From ! {self(), exit},
-            exit(Reason)
+            From ! {erlang:self(), exit},
+            erlang:exit(Reason)
     end,
     wait_for_consuming(Parent, QueueName, Fun).
 
 consume(Item, QueueName, Fun) ->
-    case nthrottle:throttle(QueueName, {self(), throttle_consume}) of
+    case nthrottle:throttle(QueueName, {erlang:self(), throttle_consume}) of
         ok ->
             do_consume(Item, QueueName, Fun);
         rps_exceeded ->

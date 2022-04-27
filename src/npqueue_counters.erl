@@ -13,8 +13,6 @@
 %% limitations under the License.
 -module(npqueue_counters).
 
-%%% INCLUDE FILES
-
 %%% EXTERNAL EXPORTS
 -export([
     init/1,

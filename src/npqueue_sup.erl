@@ -14,16 +14,11 @@
 -module(npqueue_sup).
 -behaviour(supervisor).
 
-%%% INCLUDE FILES
--include_lib("kernel/include/logger.hrl").
-
 %%% START/STOP EXPORTS
 -export([start_link/5]).
 
 %%% INTERNAL EXPORTS
 -export([init/1]).
-
-%%% MACROS
 
 %%%-----------------------------------------------------------------------------
 %%% START/STOP EXPORTS

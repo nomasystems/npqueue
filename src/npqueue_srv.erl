@@ -15,8 +15,6 @@
 
 -behaviour(gen_server).
 
-%%% INCLUDE FILES
-
 %%% START/STOP EXPORTS
 -export([start_link/5, stop/1]).
 

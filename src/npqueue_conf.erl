@@ -27,7 +27,7 @@
 ]).
 
 %%% MACROS
--define(CONF_KEY(QueueName), {'npqueue_conf', QueueName}).
+-define(CONF_KEY(QueueName), {?MODULE, QueueName}).
 -define(NUM_PARTITIONS_MAP_KEY, 'num_partitions').
 -define(PARTITION_SERVERS_MAP_KEY, 'partition_servers').
 

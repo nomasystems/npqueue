@@ -15,8 +15,6 @@
 
 -behaviour(gen_server).
 
-%%% INCLUDE FILES
-
 %%% START/STOP EXPORTS
 -export([start_link/4, stop/1, stop/2]).
 
@@ -78,13 +76,13 @@ init([QueueName, PartitionNum, ConsumerCount, ConsumerFun]) ->
 
 terminate(Reason, #st{consumers = Consumers}) ->
     Terminate = fun({ConsumerPid, ConsumerRef}) ->
-        demonitor(ConsumerRef),
+        erlang:demonitor(ConsumerRef),
         ConsumerPid ! {exit, Reason, self()},
         receive
             {ConsumerPid, exit} ->
                 ok
         after 5000 ->
-            exit(ConsumerPid, kill)
+            erlang:exit(ConsumerPid, kill)
         end
     end,
     lists:foreach(Terminate, Consumers),
