@@ -28,9 +28,24 @@
 %%%-----------------------------------------------------------------------------
 %%% START/STOP EXPORTS
 %%%-----------------------------------------------------------------------------
+-spec start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun) -> Result when
+    QueueName :: atom(),
+    PartitionCount :: non_neg_integer(),
+    ConsumerCount :: non_neg_integer(),
+    ConsumerFun :: fun(),
+    QueuePid :: pid(),
+    Result :: {ok, QueuePid} | {error, term()}.
 start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun) ->
     start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, infinity).
 
+-spec start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) -> Result when
+    QueueName :: atom(),
+    PartitionCount :: non_neg_integer(),
+    ConsumerCount :: non_neg_integer(),
+    ConsumerFun :: fun(),
+    QueuePid :: pid(),
+    Rps :: nthrottle:rps(),
+    Result :: {ok, QueuePid} | {error, term()}.
 start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) when
     is_atom(QueueName),
     PartitionCount > 0,
@@ -46,29 +61,57 @@ stop(ServerRef) ->
 %%%-----------------------------------------------------------------------------
 %%% IN/OUT EXPORTS
 %%%-----------------------------------------------------------------------------
+-spec in(QueueName, Item) -> Result when
+    QueueName :: atom(),
+    Item :: term(),
+    Result :: ok | {error, term()}.
 in(QueueName, Item) ->
     npqueue_router:in(QueueName, Item).
 
+-spec in(QueueName, Item, PartitionSelectorFun) -> Result when
+    QueueName :: atom(),
+    Item :: term(),
+    PartitionSelectorFun :: fun(),
+    Result :: ok | {error, term()}.
 in(QueueName, Item, PartitionSelectorFun) ->
     npqueue_router:in(QueueName, Item, PartitionSelectorFun).
 %%%-----------------------------------------------------------------------------
 %%% UTIL EXPORTS
 %%%-----------------------------------------------------------------------------
+-spec is_empty(QueueName) -> Result when
+    QueueName :: atom(),
+    Result :: boolean().
 is_empty(QueueName) ->
     npqueue_counters:is_empty(QueueName).
 
+-spec len(QueueName) -> Result when
+    QueueName :: atom(),
+    Result :: integer().
 len(QueueName) ->
     npqueue_counters:len(QueueName).
 
+-spec total_in(QueueName) -> Result when
+    QueueName :: atom(),
+    Result :: integer().
 total_in(QueueName) ->
     npqueue_counters:counter_in(QueueName).
 
+-spec total_out(QueueName) -> Result when
+    QueueName :: atom(),
+    Result :: integer().
 total_out(QueueName) ->
     npqueue_counters:counter_out(QueueName).
 
+-spec rps(QueueName) -> Result when
+    QueueName :: atom(),
+    Result :: nthrottle:rps().
 rps(QueueName) ->
     nthrottle:rps(QueueName).
 
+-spec rps(QueueName, Rps) -> Result when
+    QueueName :: atom(),
+    Rps :: nthrottle:rps(),
+    Result :: nthrottle:rps().
 rps(QueueName, Rps) when
     is_atom(QueueName),
     (is_integer(Rps) or is_float(Rps) or (Rps == infinity)),
@@ -76,6 +119,8 @@ rps(QueueName, Rps) when
 ->
     nthrottle:rps(QueueName, Rps).
 
+-spec hooks() -> Hooks when
+    Hooks :: [atom()].
 hooks() ->
     [
         'init_queue',
