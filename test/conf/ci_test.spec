@@ -3,4 +3,4 @@
 {define, 'TestDir', ".."}.
 {suites, 'TestDir', all}.
 {ct_hooks, [{cth_surefire, [{path, "report.xml"}]}]}.
-{skip_cases, test, npqueue_SUITE, [performance], "Not needed for ci"}.
+{skip_cases, 'TestDir', npqueue_SUITE, [performance], "Not needed for ci"}.
