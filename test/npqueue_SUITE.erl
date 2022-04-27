@@ -291,10 +291,7 @@ one_consumer(_Conf) ->
     Total = npqueue:total_in(Name),
     Total = npqueue:total_out(Name),
     ct:print("All ~p items processed", [Total]),
-    catch npqueue:stop(QueuePid),
-    %%TODO: This catch is because after this test stopping the queue,
-    %%particularlly nthrottle_srv stop_throttling is really slow and it reaches the 5000 ms timeout.
-    %%it ends up stopping, but it's really slow
+    npqueue:stop(QueuePid),
     ok.
 
 one_producer() ->
