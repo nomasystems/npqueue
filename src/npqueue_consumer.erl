@@ -26,9 +26,11 @@
 %%% START/STOP EXPORTS
 %%%-----------------------------------------------------------------------------
 start_monitoring(QueueName, Fun) ->
-    {Pid, MonRef} = erlang:spawn_opt(?MODULE, wait_for_consuming, [erlang:self(), QueueName, Fun], [
-        monitor, {fullsweep_after, 10}
-    ]),
+    {Pid, MonRef} = erlang:spawn_opt(
+        ?MODULE, wait_for_consuming, [erlang:self(), QueueName, Fun], [
+            monitor, {fullsweep_after, 10}
+        ]
+    ),
     {ok, {Pid, MonRef}}.
 
 %%%-----------------------------------------------------------------------------
