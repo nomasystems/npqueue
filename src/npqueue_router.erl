@@ -31,9 +31,7 @@ in(QueueName, Item, PartitionSelectorFun) ->
         npqueue_partition_srv:in(SrvPid, Item)
     catch
         error:badarg ->
-            {error, {wrong_queue, QueueName}};
-        Error:Cause:Args ->
-            ct:print("Error: ~p ~n Cause: ~p ~n Args:~p", [Error, Cause, Args])
+            {error, {wrong_queue, QueueName}}
     end.
 
 %%%-----------------------------------------------------------------------------
