@@ -16,7 +16,7 @@
 -behaviour(gen_server).
 
 %%% START/STOP EXPORTS
--export([start_link/5, stop/1]).
+-export([start_link/5]).
 
 %%% INIT/TERMINATE EXPORTS
 -export([init/1, terminate/2]).
@@ -45,11 +45,6 @@ start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps) ->
     gen_server:start_link(
         {local, SrvName}, ?MODULE, [Name, PartitionCount, ConsumerCount, ConsumerFun, Rps], []
     ).
-
-stop(Name) when is_atom(Name) ->
-    gen_server:stop(?SRV_NAME(Name));
-stop(SrvPid) when is_pid(SrvPid) ->
-    gen_server:stop(SrvPid).
 
 %%%-----------------------------------------------------------------------------
 %%% INIT/TERMINATE EXPORTS
