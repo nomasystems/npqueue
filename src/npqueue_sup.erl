@@ -15,20 +15,32 @@
 -behaviour(supervisor).
 
 %%% START/STOP EXPORTS
--export([start_link/5]).
+-export([start_link/5, stop/1]).
 
 %%% INTERNAL EXPORTS
 -export([init/1]).
+
+%%% MACROS
+-define(SUP_NAME(QueueName), erlang:binary_to_atom(<<QueueName/binary, "-npqueue_sup">>, utf8)).
 
 %%%-----------------------------------------------------------------------------
 %%% START/STOP EXPORTS
 %%%-----------------------------------------------------------------------------
 start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) ->
     QueueNameBin = erlang:atom_to_binary(QueueName, utf8),
-    SupName = erlang:binary_to_atom(<<QueueNameBin/binary, "-npqueue_sup">>, utf8),
+    SupName = ?SUP_NAME(QueueNameBin),
     supervisor:start_link({local, SupName}, ?MODULE, [
         QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps
     ]).
+
+stop(QueueName) ->
+    QueueNameBin = erlang:atom_to_binary(QueueName, utf8),
+    case erlang:whereis(?SUP_NAME(QueueNameBin)) of
+        undefined ->
+            already_stopped;
+        Pid ->
+            erlang:exit(Pid, shutdown)
+    end.
 
 %%%-----------------------------------------------------------------------------
 %%% INTERNAL EXPORTS
