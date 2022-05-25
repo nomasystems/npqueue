@@ -39,7 +39,7 @@ stop(QueueName) ->
     QueueNameBin = erlang:atom_to_binary(QueueName, utf8),
     case erlang:whereis(?SUP_NAME(QueueNameBin)) of
         undefined ->
-            {error, not_found};
+            {error, {not_found, QueueName}};
         Pid ->
             erlang:exit(Pid, shutdown)
     end.
