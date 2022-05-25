@@ -78,6 +78,7 @@ api(_Conf) ->
     CountIn = PartitionCount * 10,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
     {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
+
     true = npqueue:is_empty(Name),
     0 = npqueue:len(Name),
     0 = npqueue:total_in(Name),
@@ -113,6 +114,7 @@ force_order_using_partitions(_Conf) ->
         npqueue:in(Name, X, PartitionSelector)
     end,
     {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
+
     true = npqueue:is_empty(Name),
     0 = npqueue:len(Name),
     0 = npqueue:total_in(Name),
@@ -144,6 +146,7 @@ throttling(_Conf) ->
     CountIn = ConsumerCount * 1000,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
     {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
+
     true = npqueue:is_empty(Name),
     Start = erlang:timestamp(),
     lists:foreach(ProducerIn, lists:seq(1, CountIn)),
@@ -172,6 +175,7 @@ throttling_updates(_Conf) ->
     CountIn = PartitionCount * 10,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
     {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
+
     true = npqueue:is_empty(Name),
     lists:foreach(ProducerIn, lists:seq(1, CountIn)),
     timer:sleep(1000),
@@ -271,7 +275,8 @@ one_consumer(_Conf) ->
     end,
     ets:new(summary, [public, ordered_set, named_table]),
     ets:new(items, [public, bag, named_table]),
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     ct:print("Queue with 1 consumer ready..."),
     Producer = fun(N) -> spawn(fun() -> producer(Name, N, Items) end) end,
     lists:foreach(Producer, lists:seq(1, Producers)),
@@ -291,7 +296,7 @@ one_consumer(_Conf) ->
     Total = npqueue:total_in(Name),
     Total = npqueue:total_out(Name),
     ct:print("All ~p items processed", [Total]),
-    npqueue:stop(QueuePid),
+    npqueue:stop(Name),
     ok.
 
 one_producer() ->
@@ -309,7 +314,8 @@ one_producer(_Conf) ->
     end,
     ets:new(summary, [public, ordered_set, named_table]),
     ets:new(items, [public, bag, named_table]),
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     ct:print("~p consumer ready...", [Consumers]),
     spawn(fun() -> producer(Name, 1, Items) end),
     ct:print("1 producer created..."),
@@ -329,7 +335,7 @@ one_producer(_Conf) ->
     Total = npqueue:total_out(Name),
     ct:print("No duplicated items"),
     ct:print("All ~p items processed", [Total]),
-    npqueue:stop(QueuePid),
+    npqueue:stop(Name),
     ok.
 
 performance() ->
@@ -346,7 +352,8 @@ performance(_Conf) ->
     Consume = fun({N, _Count}) ->
         counters:add(Counter, 1, N)
     end,
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     SecondsBefore = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
     ct:print("~p consumers ready...", [Consumers]),
     Producer = fun(N) -> spawn(fun() -> producer(Name, N, Items) end) end,
@@ -371,7 +378,7 @@ performance(_Conf) ->
     ct:print("All ~p items processed in ~p seconds! (~p items/sec)", [
         Total, Seconds, Total div Seconds
     ]),
-    npqueue:stop(QueuePid),
+    npqueue:stop(Name),
     ok.
 
 producer(_Name, _N, 0) ->

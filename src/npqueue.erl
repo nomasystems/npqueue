@@ -56,7 +56,7 @@ start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) when
     npqueue_sup:start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps).
 
 stop(ServerRef) ->
-    npqueue_srv:stop(ServerRef).
+    npqueue_sup:stop(ServerRef).
 
 %%%-----------------------------------------------------------------------------
 %%% IN/OUT EXPORTS
