@@ -32,7 +32,6 @@ start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) ->
     {ok, Pid} = supervisor:start_link({local, SupName}, ?MODULE, [
         QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps
     ]),
-    erlang:unlink(Pid),
     {ok, Pid}.
 
 stop(QueueName) ->
@@ -41,7 +40,7 @@ stop(QueueName) ->
         undefined ->
             {error, not_found};
         Pid ->
-            erlang:exit(Pid, shutdown)
+            erlang:exit(Pid, normal)
     end.
 
 %%%-----------------------------------------------------------------------------
