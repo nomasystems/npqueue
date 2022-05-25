@@ -77,8 +77,8 @@ api(_Conf) ->
     ConsumerCount = 5,
     CountIn = PartitionCount * 10,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
-    {ok, QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
+
     true = npqueue:is_empty(Name),
     0 = npqueue:len(Name),
     0 = npqueue:total_in(Name),
@@ -113,8 +113,8 @@ force_order_using_partitions(_Conf) ->
     ProducerIn = fun(X) ->
         npqueue:in(Name, X, PartitionSelector)
     end,
-    {ok, QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun),
+
     true = npqueue:is_empty(Name),
     0 = npqueue:len(Name),
     0 = npqueue:total_in(Name),
@@ -145,8 +145,8 @@ throttling(_Conf) ->
     Rps = 5000,
     CountIn = ConsumerCount * 1000,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
-    {ok, QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
+
     true = npqueue:is_empty(Name),
     Start = erlang:timestamp(),
     lists:foreach(ProducerIn, lists:seq(1, CountIn)),
@@ -174,8 +174,8 @@ throttling_updates(_Conf) ->
     Rps = 1,
     CountIn = PartitionCount * 10,
     ProducerIn = fun(X) -> npqueue:in(Name, X) end,
-    {ok, QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps),
+
     true = npqueue:is_empty(Name),
     lists:foreach(ProducerIn, lists:seq(1, CountIn)),
     timer:sleep(1000),
@@ -275,8 +275,8 @@ one_consumer(_Conf) ->
     end,
     ets:new(summary, [public, ordered_set, named_table]),
     ets:new(items, [public, bag, named_table]),
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     ct:print("Queue with 1 consumer ready..."),
     Producer = fun(N) -> spawn(fun() -> producer(Name, N, Items) end) end,
     lists:foreach(Producer, lists:seq(1, Producers)),
@@ -314,8 +314,8 @@ one_producer(_Conf) ->
     end,
     ets:new(summary, [public, ordered_set, named_table]),
     ets:new(items, [public, bag, named_table]),
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     ct:print("~p consumer ready...", [Consumers]),
     spawn(fun() -> producer(Name, 1, Items) end),
     ct:print("1 producer created..."),
@@ -352,8 +352,8 @@ performance(_Conf) ->
     Consume = fun({N, _Count}) ->
         counters:add(Counter, 1, N)
     end,
-    {ok, QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
-    erlang:unlink(QueuePid),
+    {ok, _QueuePid} = npqueue:start_link(Name, Partitions, Consumers, Consume),
+
     SecondsBefore = calendar:datetime_to_gregorian_seconds(calendar:universal_time()),
     ct:print("~p consumers ready...", [Consumers]),
     Producer = fun(N) -> spawn(fun() -> producer(Name, N, Items) end) end,

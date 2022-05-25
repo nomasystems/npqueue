@@ -29,9 +29,11 @@
 start_link(QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps) ->
     QueueNameBin = erlang:atom_to_binary(QueueName, utf8),
     SupName = ?SUP_NAME(QueueNameBin),
-    supervisor:start_link({local, SupName}, ?MODULE, [
+    {ok, Pid} = supervisor:start_link({local, SupName}, ?MODULE, [
         QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps
-    ]).
+    ]),
+    erlang:unlink(Pid),
+    {ok, Pid}.
 
 stop(QueueName) ->
     QueueNameBin = erlang:atom_to_binary(QueueName, utf8),
