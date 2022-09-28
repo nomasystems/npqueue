@@ -50,6 +50,7 @@ start_link(Name, PartitionCount, ConsumerCount, ConsumerFun, Rps) ->
 %%% INIT/TERMINATE EXPORTS
 %%%-----------------------------------------------------------------------------
 init([QueueName, PartitionCount, ConsumerCount, ConsumerFun, Rps]) ->
+    process_flag(trap_exit, true),
     nthrottle:start_throttling(QueueName, Rps),
     npqueue_conf:init(QueueName),
     npqueue_counters:init(QueueName),
