@@ -23,6 +23,7 @@ all() ->
     [
         api,
         force_order_using_partitions,
+        hooks,
         throttling,
         throttling_updates,
         one_producer,
@@ -95,6 +96,25 @@ api(_Conf) ->
     {ok, Rps} = npqueue:rps(Name),
     npqueue:stop(Name),
     ok.
+
+hooks() ->
+    [{userdata, [{doc, "Tests that hooks are getting called."}]}].
+
+hooks(_Conf) ->
+    TestPid = self(),
+    Hooks = npqueue:hooks(),
+    [nhooks:register_task(npqueue, H, fun(P) -> TestPid ! {hook, H, P} end) || H <- Hooks],
+    Name = test_queue_hooks,
+    ReceiveQueueHook = fun(Hook) ->
+        receive
+            {hook, Hook, Name} -> ok
+        after 2000 -> throw({not_received, Hook})
+        end
+    end,
+    {ok, _QueuePid} = npqueue:start_link(Name, 1, 1, fun(_) -> ok end),
+    ok = ReceiveQueueHook(init_queue),
+    npqueue:stop(Name),
+    ok = ReceiveQueueHook(terminate_queue).
 
 force_order_using_partitions() ->
     [{userdata, [{doc, "Exported functions in npqueue."}]}].
