@@ -66,6 +66,7 @@ stop(SrvPid) when is_pid(SrvPid) ->
 %%% INIT/TERMINATE EXPORTS
 %%%-----------------------------------------------------------------------------
 init([QueueName, PartitionNum, ConsumerCount, ConsumerFun]) ->
+    process_flag(trap_exit, true),
     Consumers = init_consumers(QueueName, ConsumerCount, ConsumerFun),
     {ok, #st{
         queue_name = QueueName,

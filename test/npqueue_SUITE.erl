@@ -28,7 +28,8 @@ all() ->
         throttling_updates,
         one_producer,
         one_consumer,
-        performance
+        performance,
+        terminate_stops_consumer
     ].
 
 %%%-----------------------------------------------------------------------------
@@ -302,16 +303,7 @@ one_consumer(_Conf) ->
     lists:foreach(Producer, lists:seq(1, Producers)),
     ct:print("~p producers created...", [Producers]),
     Total = Producers * Items,
-    IsAllConsumed = fun() ->
-        case counters:get(Counter, 1) of
-            Total ->
-                true;
-            Other ->
-                ct:print("Current consumed: ~p of ~p", [Other, Total]),
-                false
-        end
-    end,
-    wait_true(IsAllConsumed),
+    wait_true(is_all_consumed(Counter, Total)),
     0 = npqueue:len(Name),
     Total = npqueue:total_in(Name),
     Total = npqueue:total_out(Name),
@@ -340,16 +332,7 @@ one_producer(_Conf) ->
     spawn(fun() -> producer(Name, 1, Items) end),
     ct:print("1 producer created..."),
     Total = Producers * Items,
-    IsAllConsumed = fun() ->
-        case counters:get(Counter, 1) of
-            Total ->
-                true;
-            Other ->
-                ct:print("Current consumed: ~p of ~p", [Other, Total]),
-                false
-        end
-    end,
-    wait_true(IsAllConsumed),
+    wait_true(is_all_consumed(Counter, Total)),
     0 = npqueue:len(Name),
     Total = npqueue:total_in(Name),
     Total = npqueue:total_out(Name),
@@ -380,16 +363,7 @@ performance(_Conf) ->
     lists:foreach(Producer, lists:seq(1, Producers)),
     ct:print("~p producers created...", [Producers]),
     Total = Producers * Items,
-    IsAllConsumed = fun() ->
-        case counters:get(Counter, 1) of
-            TotalSum ->
-                true;
-            Other ->
-                ct:print("Current num: ~p of ~p", [Other, TotalSum]),
-                false
-        end
-    end,
-    wait_true(IsAllConsumed),
+    wait_true(is_all_consumed(Counter, TotalSum)),
     0 = npqueue:len(Name),
     Total = npqueue:total_in(Name),
     Total = npqueue:total_out(Name),
@@ -400,6 +374,47 @@ performance(_Conf) ->
     ]),
     npqueue:stop(Name),
     ok.
+
+terminate_stops_consumer() ->
+    [{userdata, [{doc, "Tests terminating the consumer along the queue."}]}].
+
+terminate_stops_consumer(_Conf) ->
+    TestPid = self(),
+    Consume = fun(_Item) ->
+        % On consume, just wait until a (exit) message is received
+        TestPid ! consumer_started,
+        receive
+            M -> self() ! M
+        end,
+        TestPid ! {consumer_finished, M}
+    end,
+    Name = test_queue,
+    {ok, _QueuePid} = npqueue:start_link(Name, 1, 1, Consume),
+    producer(Name, item, 1),
+    receive
+        consumer_started -> ok
+    end,
+    npqueue:stop(Name),
+    receive
+        {consumer_finished, _M} -> ok
+    after 2000 ->
+        throw(consumer_timeout)
+    end,
+    ok.
+
+%%%-----------------------------------------------------------------------------
+%%% INTERNAL FUNCTIONS
+%%%-----------------------------------------------------------------------------
+is_all_consumed(Counter, Total) ->
+    fun() ->
+        case counters:get(Counter, 1) of
+            Total ->
+                true;
+            Other ->
+                ct:print("Current num: ~p of ~p", [Other, Total]),
+                false
+        end
+    end.
 
 producer(_Name, _N, 0) ->
     ok;
@@ -412,7 +427,7 @@ wait_true(Fun) ->
         true ->
             ok;
         false ->
-            timer:sleep(1000),
+            timer:sleep(100),
             wait_true(Fun)
     end.
 
