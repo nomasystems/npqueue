@@ -10,7 +10,7 @@ Add `npqueue` to your project dependencies.
 ```erl
 %%% e.g., rebar.config
 {deps, [
-    {npqueue, {git, "git@github.com:nomasystems/npqueue.git", {tag, "1.0.0"}}}
+    {npqueue, {git, "git@github.com:nomasystems/npqueue.git", {tag, "1.0.3"}}}
 ]}.
 ```
 
