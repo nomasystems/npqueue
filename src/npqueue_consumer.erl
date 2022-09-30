@@ -42,8 +42,6 @@ wait_for_consuming(Parent, QueueName, Fun) ->
         {consume, Item} ->
             npqueue_counters:counter_out_add(QueueName),
             consume(Item, QueueName, Fun);
-        {exit, Reason} ->
-            erlang:exit(Reason);
         {exit, Reason, From} ->
             From ! {erlang:self(), exit},
             erlang:exit(Reason)
@@ -66,11 +64,7 @@ do_consume(Item, QueueName, Fun) ->
         Fun(Item)
     catch
         Class:Reason:Stacktrace ->
-            ?LOG_ERROR("Error consuming the queue ~p. Error: ~p:~p. Stacktrace: ~p", [
-                QueueName,
-                Class,
-                Reason,
-                Stacktrace
-            ]),
+            Params = [QueueName, Class, Reason, Stacktrace],
+            ?LOG_ERROR("Error consuming the queue ~p. Error: ~p:~p. Stacktrace: ~p", Params),
             erlang:raise(Class, Reason, Stacktrace)
     end.

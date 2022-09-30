@@ -56,10 +56,6 @@ num_partitions(QueueName, NumPartitions) ->
     NewConf = Conf#{?NUM_PARTITIONS_MAP_KEY => NumPartitions},
     persistent_term:put(Key, NewConf).
 
-partition_server(Conf, PartitionNum) when is_map(Conf) ->
-    #{?PARTITION_SERVERS_MAP_KEY := PartitionServers} = Conf,
-    #{PartitionNum := Server} = PartitionServers,
-    Server;
 partition_server(QueueName, PartitionNum) ->
     #{PartitionNum := Server} = partition_servers(QueueName),
     Server.

@@ -16,7 +16,7 @@
 -behaviour(gen_server).
 
 %%% START/STOP EXPORTS
--export([start_link/4, stop/1, stop/2]).
+-export([start_link/4, stop/1]).
 
 %%% INIT/TERMINATE EXPORTS
 -export([init/1, terminate/2]).
@@ -26,9 +26,6 @@
 
 %%% HANDLE MESSAGES EXPORTS
 -export([handle_call/3, handle_cast/2, handle_info/2]).
-
-%%% CODE UPDATE EXPORTS
--export([code_change/3]).
 
 %%% MACROS
 -define(SRV_NAME(Name, PartitionNum),
@@ -56,9 +53,6 @@ start_link(QueueName, PartitionNum, ConsumerCount, ConsumerFun) ->
         {local, SrvName}, ?MODULE, [QueueName, PartitionNum, ConsumerCount, ConsumerFun], []
     ).
 
-stop(Name, PartitionNum) when is_atom(Name) ->
-    gen_server:stop(?SRV_NAME(Name, PartitionNum)).
-
 stop(SrvPid) when is_pid(SrvPid) ->
     gen_server:stop(SrvPid).
 
@@ -82,7 +76,7 @@ terminate(Reason, #st{consumers = Consumers}) ->
         receive
             {ConsumerPid, exit} ->
                 ok
-        after 5000 ->
+        after application:get_env(npqueue, consumer_kill_wait, 5000) ->
             erlang:exit(ConsumerPid, kill)
         end
     end,
@@ -129,22 +123,12 @@ handle_info(
     {'DOWN', ConsumerMonRef, process, _Object, _Info},
     #st{consumers = Consumers, queue_name = QueueName, function = Function} = St
 ) ->
-    case lists:keytake(ConsumerMonRef, 2, Consumers) of
-        false ->
-            {noreply, St};
-        {value, {_ConsumerPid, ConsumerMonRef}, RestConsumers} ->
-            erlang:demonitor(ConsumerMonRef),
-            Consumer = init_consumer(QueueName, Function),
-            {noreply, St#st{consumers = [Consumer | RestConsumers]}}
-    end;
+    erlang:demonitor(ConsumerMonRef),
+    RestConsumers = lists:keydelete(ConsumerMonRef, 2, Consumers),
+    NewConsumer = init_consumer(QueueName, Function),
+    {noreply, St#st{consumers = [NewConsumer | RestConsumers]}};
 handle_info(_Info, St) ->
     {noreply, St}.
-
-%%%-----------------------------------------------------------------------------
-%%% CODE UPDATE EXPORTS
-%%%-----------------------------------------------------------------------------
-code_change(_OldVsn, St, _Extra) ->
-    {ok, St}.
 
 %%%-----------------------------------------------------------------------------
 %%% INTERNAL FUNCTIONS
