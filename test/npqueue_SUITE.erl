@@ -28,8 +28,11 @@ all() ->
         throttling_updates,
         one_producer,
         one_consumer,
+        one_consumer_exception,
         performance,
-        terminate_stops_consumer
+        stop_twice,
+        terminate_stops_consumer,
+        terminate_kills_consumer
     ].
 
 %%%-----------------------------------------------------------------------------
@@ -288,8 +291,8 @@ one_consumer(_Conf) ->
     Name = test_queue,
     Partitions = 1,
     Consumers = 1,
-    Producers = ct:get_config(producers, 1000),
-    Items = ct:get_config(items, 1000),
+    Producers = 10,
+    Items = 10,
     Counter = counters:new(1, [write_concurrency]),
     Consume = fun(_Item) ->
         counters:add(Counter, 1, 1)
@@ -311,15 +314,29 @@ one_consumer(_Conf) ->
     npqueue:stop(Name),
     ok.
 
+one_consumer_exception() ->
+    [{userdata, [{doc, "Tests with one consumer that throws an exception."}]}].
+
+one_consumer_exception(_Conf) ->
+    Name = test_queue_exception,
+    Counter = counters:new(1, [write_concurrency]),
+    {ok, _QueuePid} = npqueue:start_link(Name, 1, 1, fun(_) ->
+        counters:add(Counter, 1, 1),
+        throw({Name, exception})
+    end),
+    producer(Name, item, 1),
+    wait_true(is_all_consumed(Counter, 1)),
+    true = npqueue:stop(Name).
+
 one_producer() ->
     [{userdata, [{doc, "Tests with one producer and many consumers."}]}].
 
 one_producer(_Conf) ->
     Name = test_queue,
-    Partitions = ct:get_config(partitions, 1000),
-    Consumers = ct:get_config(consumers, 10),
+    Partitions = 100,
+    Consumers = 10,
     Producers = 1,
-    Items = ct:get_config(items, 1000),
+    Items = 1000,
     Counter = counters:new(1, [write_concurrency]),
     Consume = fun(_Item) ->
         counters:add(Counter, 1, 1)
@@ -400,6 +417,42 @@ terminate_stops_consumer(_Conf) ->
     after 2000 ->
         throw(consumer_timeout)
     end,
+    ok.
+
+stop_twice() ->
+    [{userdata, [{doc, "Tests stopping a queue twice."}]}].
+
+stop_twice(_Conf) ->
+    Name = test_queue_stop,
+    {ok, QueuePid} = npqueue:start_link(Name, 2, 4, fun(_) -> ok end),
+    unlink(QueuePid),
+    true = npqueue:stop(Name),
+    wait_true(fun() -> is_process_alive(QueuePid) =:= false end),
+    {error, {not_found, Name}} = npqueue:stop(Name),
+    ok.
+
+terminate_kills_consumer(_Conf) ->
+    application:set_env(npqueue, consumer_kill_wait, 0),
+    TestPid = self(),
+    Consume = fun(_Item) ->
+        % On consume, just wait until a (exit) message is received
+        TestPid ! {consumer_started, self()},
+        timer:sleep(10000)
+    end,
+    Name = test_queue,
+    {ok, _QueuePid} = npqueue:start_link(Name, 1, 1, Consume),
+    producer(Name, item, 1),
+    ConsumerPid =
+        receive
+            {consumer_started, Pid} -> Pid
+        end,
+    Ref = erlang:monitor(process, ConsumerPid),
+    npqueue:stop(Name),
+    receive
+        {'DOWN', Ref, _, _, _} -> ok
+    after 1000 -> throw(consumer_timeout)
+    end,
+    application:unset_env(npqueue, consumer_kill_wait),
     ok.
 
 %%%-----------------------------------------------------------------------------

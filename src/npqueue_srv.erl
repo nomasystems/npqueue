@@ -24,9 +24,6 @@
 %%% HANDLE MESSAGES EXPORTS
 -export([handle_call/3, handle_cast/2, handle_info/2]).
 
-%%% CODE UPDATE EXPORTS
--export([code_change/3]).
-
 %%% MACROS
 -define(SRV_NAME(Name), list_to_atom(atom_to_list(Name) ++ "_queue_srv")).
 
@@ -88,12 +85,6 @@ handle_cast(Req, St) ->
 
 handle_info(_Info, St) ->
     {noreply, St}.
-
-%%%-----------------------------------------------------------------------------
-%%% CODE UPDATE EXPORTS
-%%%-----------------------------------------------------------------------------
-code_change(_OldVsn, St, _Extra) ->
-    {ok, St}.
 
 %%%-----------------------------------------------------------------------------
 %%% INTERNAL FUNCTIONS
